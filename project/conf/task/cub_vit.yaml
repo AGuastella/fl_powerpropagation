@@ -3,14 +3,14 @@
 # Please implement all behaviour in the task-level dispatch.py file and then add the dispatch functions to the top-level dispatch.py
 # Choose the model and dataset
 # model_and_data: VIT
-model_and_data: VIT_POWERPROP
-# model_and_data: VIT_POWER_SWAT
-# model_and_data: VIT_PRE_TRAINED
+# model_and_data: CUB_TINYVIT
+# model_and_data: CUB_TINYVIT_SPARSYFED
+model_and_data: CUB_TINYVIT_SPARSYFED_NO_ACT
 
 # Choose the train, test and server fed_eval functions
-train_structure: CIFAR_VIT_POWERPROP
-# train_structure: CIFAR_VIT_POWERPROP_PRUNE
-# train_structure: CIFAR_VIT_FIX
+train_structure: CUB_TINYVIT
+# train_structure: CUB_TINYVIT_PRUNE
+# train_structure: CUB_TINYVIT_FIX
 
 alpha: 1.0
 sparsity: 0.0
@@ -22,7 +22,7 @@ fit_config:
   net_config: {}
   # Dataloader requires batch_size
   dataloader_config:
-    batch_size: 128
+    batch_size: 32
   # The train function requires epochs and learning_rate
   run_config:
     epochs: 1
@@ -48,7 +48,7 @@ fed_test_config:
   net_config: {}
   # The testing function batch size can be as high as the GPU supports
   dataloader_config:
-    batch_size: 256
+    batch_size: 1024
   # Unlike train, the mnist train function takes no parameters?
   run_config: {}
   extra: {}

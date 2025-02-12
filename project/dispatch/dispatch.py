@@ -32,6 +32,15 @@ from project.task.speech_resnet18.dispatch import (
 )
 
 # ViT dispatch
+from project.task.cub_vit.dispatch import (
+    dispatch_config as dispatch_cub_vit_config,
+)
+from project.task.cub_vit.dispatch import (
+    dispatch_data as dispatch_cub_vit_data,
+)
+from project.task.cub_vit.dispatch import (
+    dispatch_train as dispatch_cub_vit_train,
+)
 
 
 from project.types.common import ConfigStructure, DataStructure, TrainStructure
@@ -59,6 +68,7 @@ def dispatch_train(cfg: DictConfig) -> TrainStructure:
     task_train_functions: list[Callable[[DictConfig], TrainStructure | None]] = [
         dispatch_resnet18_train,
         dispatch_speech_resnet18_train,
+        dispatch_cub_vit_train,
     ]
 
     # Match the first function which does not return None
@@ -96,6 +106,7 @@ def dispatch_data(cfg: DictConfig) -> DataStructure:
     ] = [
         dispatch_resnet18_data,
         dispatch_speech_resnet18_data,
+        dispatch_cub_vit_data,
     ]
 
     # Match the first function which does not return None
@@ -134,6 +145,7 @@ def dispatch_config(cfg: DictConfig) -> ConfigStructure:
         dispatch_default_config,
         dispatch_resnet18_config,
         dispatch_speech_resnet18_config,
+        dispatch_cub_vit_config,
     ]
 
     # Match the first function which does not return None

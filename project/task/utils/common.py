@@ -411,7 +411,7 @@ def create_lda_partitions(
 
     # Check label distribution
     unique, counts = np.unique(y, return_counts=True)
-    print(dict(zip(unique, counts)))
+    # print(dict(zip(unique, counts)))
 
     if (x.shape[0] % num_partitions) and (not accept_imbalanced):
         raise ValueError(

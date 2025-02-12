@@ -1,0 +1,66 @@
+---
+defaults:
+  - _self_
+  - task: cub_vit
+  - fed: cub_vit
+  - strategy: fedavg
+  - dataset: cub_200_2011
+
+# If running the same experiment multiple times
+# you may wish to save results to the same directory
+# if null, defaults to the hydra dir
+reuse_output_dir: null
+
+# Working dir to save temporary files to
+# If null, defaults to hydra_dir/working
+working_dir: null
+
+# List of file patterns to be saved from working_dir
+# at the end of training
+to_save_once: [history, yaml, log]
+
+# List of file patterns to be saved repeteadly
+to_save_per_round: [parameters]
+
+# The frequency with which they should be saved
+save_frequency: 100
+
+# List of flie patterns to be deleted
+# prior to and at the end of training from working_dir
+to_clean_once: [history, parameters, yaml, log]
+
+# Control wandb logging
+use_wandb: false
+
+# Test without Ray to enable easy error detection
+test_clients:
+  all: false
+  one: true
+
+# Wandb configuration
+# add whatever tags you like
+# change the name
+wandb:
+  setup:
+    project: cub_tests
+    tags:
+      - strategy_${strategy.name}
+      - seed_${fed.seed}
+      - patitioning_${dataset.name}
+    entity: null
+    mode: online
+    name: ${task.model_and_data}_${task.train_structure}-a${task.alpha}-s${task.sparsity}-${dataset.name}-${strategy.name}
+
+# For Ray cluster usage
+# leave null unless you need 
+# multiple ray instances running
+ray_address: null
+ray_redis_password: null
+ray_node_ip_address: null
+
+# When using checkpointing
+# automatically detect the most recent checkpoint
+# checks at most file_limit files up to depth 2
+# from the results directory
+# if null checks all files 
+file_limit: null
