@@ -1,10 +1,10 @@
 ---
 defaults:
   - _self_
-  - task: cifar_resnet18
-  - fed: cifar_resnet18
+  - task: cub_vit
+  - fed: cub_vit
   - strategy: fedavg
-  - dataset: cifar_lda
+  - dataset: cub_200_2011
 
 # If running the same experiment multiple times
 # you may wish to save results to the same directory
@@ -42,7 +42,7 @@ test_clients:
 # change the name
 wandb:
   setup:
-    project: cifar_test
+    project: cub_tests_cluster_opt_hyperparameter
     tags:
       - strategy_${strategy.name}
       - seed_${fed.seed}
@@ -52,7 +52,7 @@ wandb:
     name: ${task.model_and_data}_${task.train_structure}-a${task.alpha}-s${task.sparsity}-${dataset.name}-${strategy.name}
 
 # For Ray cluster usage
-# leave null unless you need 
+# leave null unless you need
 # multiple ray instances running
 ray_address: null
 ray_redis_password: null

@@ -67,6 +67,7 @@ gdown = "4.7.1"
 pydantic = "<2.0.0"
 pre-commit = "3.5.0"
 identify = "2.5.31"
+timm = "^1.0.12"
 
 
 [tool.poetry.dev-dependencies]
@@ -80,6 +81,9 @@ pytest = "==6.2.4"
 pytest-watch = "==4.2.0"
 types-requests = "==2.27.7"
 yamlfix = "1.15.0"
+
+[tool.poetry.group.dev.dependencies]
+yamllint = "^1.35.1"
 
 [tool.black]
 line-length = 88

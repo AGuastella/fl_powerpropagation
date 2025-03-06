@@ -24,10 +24,15 @@ repos:
       - id: docformatter
         additional_dependencies: [tomli]
         args: [--in-place, --config, ./pyproject.toml]
-  - repo: https://github.com/lyz-code/yamlfix/
-    rev: 1.15.0
-    hooks:
-      - id: yamlfix
+  # - repo: https://github.com/lyz-code/yamlfix/
+  #   rev: 1.15.0
+  #   hooks:
+  #     - id: yamlfix
+  # - repo: https://github.com/adrienverge/yamllint.git
+  #   rev: v1.32.0
+  #   hooks:
+  #     - id: yamllint
+  #       args: [--format=parsable, --strict]
   - repo: https://github.com/psf/black
     rev: 23.11.0
     hooks:

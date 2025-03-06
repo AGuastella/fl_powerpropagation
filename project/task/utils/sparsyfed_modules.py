@@ -95,6 +95,8 @@ def convolution_backward(
 
 
 class sparsyfed_linear(Function):
+    threshold = 1e-7
+
     @staticmethod
     def forward(ctx, input, weight, bias, sparsity):
 
@@ -106,7 +108,7 @@ class sparsyfed_linear(Function):
             if bias is not None:
                 output += bias
 
-        topk = 1 - sparsity
+        topk = max(1 - sparsity, sparsyfed_linear.threshold)
 
         sparse_input = matrix_drop(input, topk)
 
@@ -193,6 +195,8 @@ class SparsyFedLinear(nn.Module):
 
 
 class sparsyfed_conv2d(Function):
+    threshold = 1e-7
+
     @staticmethod
     def forward(
         ctx,
@@ -219,7 +223,7 @@ class sparsyfed_conv2d(Function):
             groups=groups,
         )
 
-        topk = 1 - sparsity
+        topk = max(1 - sparsity, sparsyfed_conv2d.threshold)
 
         sparse_input = matrix_drop(input, topk)
         if in_threshold < 0.0:

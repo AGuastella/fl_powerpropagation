@@ -54,19 +54,77 @@ class ClientConfig(BaseModel):
         arbitrary_types_allowed = True
 
 
+# old
 # FROM ZEROFL
-def update_learing_rate(
-    inittial_value: float,
-    final_value: float,
-    curr_round: int,
-    total_rounds: int = 700,
-) -> float:
-    """Update the learning rate using the exponential decay."""
-    ratio = final_value / inittial_value
-    log_ratio = math.log(ratio)
-    exponential_term = (curr_round / total_rounds) * log_ratio
-    eta_t = inittial_value * math.exp(exponential_term)
-    return eta_t
+# def update_learing_rate(
+#     inittial_value: float,
+#     final_value: float,
+#     curr_round: int,
+#     tot_rounds: int = 700,
+# ) -> float:
+#     """Update the learning rate using the exponential decay."""
+#     ratio = final_value / inittial_value
+#     log_ratio = math.log(ratio)
+#     exponential_term = (curr_round / tot_rounds) * log_ratio
+#     eta_t = inittial_value * math.exp(exponential_term)
+#     return eta_t
+
+
+class LRScheduler:
+    """Learning rate scheduler with warmup and exponential decay."""
+
+    def __init__(
+        self,
+        initial_lr: float,
+        final_lr: float,
+        total_rounds: int = 700,
+        warmup_rounds: int = 0,
+    ) -> None:
+        """Initialize the learning rate scheduler.
+
+        Parameters
+        ----------
+        initial_lr : float
+            Initial learning rate value
+        final_lr : float
+            Final learning rate value
+        total_rounds : int, optional
+            Total number of rounds, by default 700
+        warmup_rounds : int, optional
+            Number of warmup rounds where LR stays at initial value, by default 0
+        """
+        self.initial_lr = initial_lr
+        self.final_lr = final_lr
+        self.total_rounds = total_rounds
+        self.warmup_rounds = warmup_rounds
+
+        # Pre-compute the log ratio for the exponential decay
+        self.log_ratio = math.log(self.final_lr / self.initial_lr)
+
+    def __call__(self, curr_round: int) -> float:
+        """Get the learning rate for the current round.
+
+        Parameters
+        ----------
+        curr_round : int
+            Current round number
+
+        Returns
+        -------
+        float
+            Learning rate for the current round
+        """
+        # During warmup, return initial learning rate
+        if curr_round < self.warmup_rounds:
+            return self.initial_lr
+
+        # After warmup, apply exponential decay
+        # Adjust the round number to account for warmup period
+        adjusted_round = curr_round - self.warmup_rounds
+        adjusted_total = self.total_rounds - self.warmup_rounds
+
+        exponential_term = (adjusted_round / adjusted_total) * self.log_ratio
+        return self.initial_lr * math.exp(exponential_term)
 
 
 class Client(fl.client.NumPyClient):
@@ -155,11 +213,21 @@ class Client(fl.client.NumPyClient):
             config.dataloader_config,
         )
 
-        config.run_config["learning_rate"] = update_learing_rate(
-            inittial_value=config.run_config["learning_rate"],
-            final_value=config.run_config["final_learning_rate"],
-            curr_round=config.run_config["curr_round"],
+        # config.run_config["learning_rate"] = update_learing_rate(
+        #     inittial_value=config.run_config["learning_rate"],
+        #     final_value=config.run_config["final_learning_rate"],
+        #     curr_round=config.run_config["curr_round"],
+        #     tot_rounds=config.run_config["tot_rounds"],
+        # )
+        # Create the scheduler
+        scheduler = LRScheduler(
+            initial_lr=config.run_config["learning_rate"],
+            final_lr=config.run_config["final_learning_rate"],
+            total_rounds=config.run_config["tot_rounds"],
+            warmup_rounds=config.run_config["warmup_rounds"],
         )
+        # Update the learning rate
+        config.run_config["learning_rate"] = scheduler(config.run_config["curr_round"])
 
         config.run_config["cid"] = self.cid
 

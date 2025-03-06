@@ -13,31 +13,7 @@ from torch import nn
 import torch.nn.functional as F
 from torch.types import _int, _size
 
-
-def spectral_norm(
-    self_weight: torch.Tensor, num_iterations: int = 1, epsilon: float = 1e-12
-) -> torch.Tensor:
-    """Spectral Normalization with sign handling and stability check."""
-    weight = self_weight  # .detach()
-    sign_weight = torch.sign(weight)
-    weight_abs = weight.abs()
-
-    weight_mat = weight_abs.view(weight_abs.size(0), -1)
-    u = torch.randn(weight_mat.size(0), 1, device=weight.device)
-    v = torch.randn(weight_mat.size(1), 1, device=weight.device)
-
-    for _ in range(num_iterations):
-        v = F.normalize(torch.matmul(weight_mat.t(), u), dim=0)
-        u = F.normalize(torch.matmul(weight_mat, v), dim=0)
-
-    sigma = torch.matmul(u.t(), torch.matmul(weight_mat, v))
-    sigma = torch.clamp(sigma, min=epsilon)  # Ensure sigma is not too small
-
-    weight_normalized = (
-        weight_abs / sigma
-    )  # Normalize the weight by the largest singular value
-
-    return self_weight * weight_normalized.view_as(self_weight)
+from project.task.utils.spectral_norm import SpectralNormHandler
 
 
 class SparsyFed_no_act_linear(nn.Module):
@@ -59,6 +35,7 @@ class SparsyFed_no_act_linear(nn.Module):
         self.b = bias
         self.weight = nn.Parameter(torch.empty(out_features, in_features))
         self.bias = nn.Parameter(torch.empty(out_features)) if self.b else None
+        self.spectral_norm_handler = SpectralNormHandler()
 
     def __repr__(self):
         return (
@@ -72,7 +49,7 @@ class SparsyFed_no_act_linear(nn.Module):
         if self.alpha == 1.0:
             return weight
         elif self.alpha < 0:
-            return spectral_norm(weight)
+            return self.spectral_norm_handler.compute_weight_update(weight)
         return torch.sign(weight) * torch.pow(torch.abs(weight), self.alpha)
 
     def forward(self, inputs, mask=None):
@@ -80,7 +57,7 @@ class SparsyFed_no_act_linear(nn.Module):
         if self.alpha == 1.0:
             weight = self.weight
         elif self.alpha < 0:
-            weight = spectral_norm(self.weight)
+            weight = self.spectral_norm_handler.compute_weight_update(self.weight)
         else:
             weight = torch.sign(self.weight) * torch.pow(
                 torch.abs(self.weight), self.alpha
@@ -123,6 +100,7 @@ class SparsyFed_no_act_Conv2D(nn.Module):
         self.padding = padding
         self.dilation = dilation
         self.groups = groups
+        self.spectral_norm_handler = SpectralNormHandler()
 
     def __repr__(self):
         return (
@@ -138,7 +116,7 @@ class SparsyFed_no_act_Conv2D(nn.Module):
         if self.alpha == 1.0:
             return weights
         elif self.alpha < 0:
-            return spectral_norm(weights)
+            return self.spectral_norm_handler.compute_weight_update(weights)
         return torch.sign(weights) * torch.pow(torch.abs(weights), self.alpha)
 
     def forward(self, inputs, mask=None):
@@ -146,7 +124,7 @@ class SparsyFed_no_act_Conv2D(nn.Module):
         if self.alpha == 1.0:
             weight = self.weight
         elif self.alpha < 0:
-            weight = spectral_norm(self.weight)
+            weight = self.spectral_norm_handler.compute_weight_update(self.weight)
         else:
             weight = torch.sign(self.weight) * torch.pow(
                 torch.abs(self.weight), self.alpha
@@ -195,6 +173,7 @@ class SparsyFed_no_act_Conv1D(nn.Module):
         self.padding = padding
         self.dilation = dilation
         self.groups = groups
+        self.spectral_norm_handler = SpectralNormHandler()
 
     def __repr__(self):
         return (
