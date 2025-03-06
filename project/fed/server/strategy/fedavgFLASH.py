@@ -312,17 +312,17 @@ class FedAvgFLASH(Strategy):
             current_sparsity = 1 - (total_nonzero / total_params)
 
             # Step 5: Adjust to target sparsity if necessary
-            if (
-                abs(current_sparsity - target_sparsity) > 1e-6
-            ):  # Allow for small floating-point differences
-                all_values = np.concatenate([
-                    np.abs(layer).flatten() for layer in pruned_parameters
-                ])
-                k = int(total_params * (1 - target_sparsity))
-                threshold = np.partition(all_values, -k)[-k]
-                pruned_parameters = [
-                    layer * (np.abs(layer) >= threshold) for layer in pruned_parameters
-                ]
+            # if (
+            #     abs(current_sparsity - target_sparsity) > 1e-6
+            # ):  # Allow for small floating-point differences
+            #     all_values = np.concatenate([
+            #         np.abs(layer).flatten() for layer in pruned_parameters
+            #     ])
+            #     k = int(total_params * (1 - target_sparsity))
+            #     threshold = np.partition(all_values, -k)[-k]
+            #     pruned_parameters = [
+            #         layer * (np.abs(layer) >= threshold) for layer in pruned_parameters
+            #     ]
 
             # Verify final global sparsity
             final_nonzero = sum(np.count_nonzero(layer) for layer in pruned_parameters)

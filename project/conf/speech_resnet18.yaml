@@ -52,7 +52,7 @@ wandb:
     name: ${task.model_and_data}_${task.train_structure}-s${task.sparsity}-${dataset.name}-${strategy.name}
 
 # For Ray cluster usage
-# leave null unless you need 
+# leave null unless you need
 # multiple ray instances running
 ray_address: null
 ray_redis_password: null
@@ -62,5 +62,5 @@ ray_node_ip_address: null
 # automatically detect the most recent checkpoint
 # checks at most file_limit files up to depth 2
 # from the results directory
-# if null checks all files 
+# if null checks all files
 file_limit: null

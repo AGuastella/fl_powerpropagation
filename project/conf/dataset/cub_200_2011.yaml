@@ -1,0 +1,38 @@
+---
+name: CUB_200_2011_lda${dataset.lda_alpha}
+
+# Where to store data
+# dataset_dir: /datasets/CIFAR${dataset.num_classes}
+dataset_dir: /datasets/CUB_200_2011
+
+# Folder of client folders
+# indexed by id, containing train and test
+# partition_dir: /datasets/CIFAR${dataset.num_classes}/lda_${dataset.lda_alpha}_${dataset.num_clients}
+# partition_dir: /datasets/CIFAR${dataset.num_classes}/lda_${dataset.lda_alpha}
+partition_dir: /datasets/CUB_200_2011/${dataset.num_clients}_clients/lda_${dataset.lda_alpha}
+
+
+# How many clients to create
+num_clients: 100
+
+# How large should the test set of each client
+# be relative to the train set
+val_ratio: 0.1
+
+# Seed for partition generation
+seed: 1337
+
+# If the partition labels 
+# should be independent and identically distributed 
+iid: false
+
+# If the partition labels should follow a power law
+# distribution
+power_law: false
+
+# If the partition labels should follow a lda distribution
+lda: true
+lda_alpha: 1000.0
+
+# If the partition labels should be balanced
+balance: false

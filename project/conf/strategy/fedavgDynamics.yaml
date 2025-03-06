@@ -1,0 +1,5 @@
+---
+name: FedAvgDynamics
+
+init:
+  _target_: project.fed.server.strategy.fedavgDynamics.FedAvgDynamics

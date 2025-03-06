@@ -27,7 +27,7 @@ from project.task.default.train_test import (
 )
 from project.task.cifar_resnet18.models import (
     get_parameters_to_prune,
-    set_spectral_exponent,
+    set_spectral_global_exponent,
 )
 
 bounds = [(0, 40), (40, 70), (70, 100)]
@@ -45,6 +45,7 @@ class TrainConfig(BaseModel):
     epochs: int
     learning_rate: float
     final_learning_rate: float  # ? to remove
+    # tot_rounds: int
     curr_round: int
 
     class Config:
@@ -343,13 +344,6 @@ def get_train_and_prune(
 
         # print(f"Client {_config}")
 
-        # SPECTRAL EXPONENT
-        # <---
-        if alpha < 0:
-            avg_exponent = set_spectral_exponent(net)
-            log(logging.INFO, f"Set average spectral exponent: {avg_exponent}")
-        # --->
-
         # assign the sparsity based on the cid
         if int(_config["curr_round"]) > 1 and len(sparsities) > 1:
             for i, bound in enumerate(bounds):
@@ -389,6 +383,8 @@ def get_train_and_prune(
             _working_dir=_working_dir,
         )
 
+        # dense_model = deepcopy(net)
+
         if sparsity > 0:
             """
             The net must be pruned:
@@ -407,6 +403,19 @@ def get_train_and_prune(
             )
             for module, name, _ in parameters_to_prune:
                 prune.remove(module, name)
+
+            # Prevent layer collapse
+            # generic_set_parameters(net, generic_get_parameters(net))
+            # sparsity_after_pruning = get_nonzeros(net)
+            # net = prevent_layer_collapse(dense_model, net, 1-sparsity)
+            # sparsity_after_prevent = get_nonzeros(net)
+            # if sparsity_after_prevent != sparsity_after_pruning:
+            #     log(
+            #         logging.INFO,
+            #         f"Pruned model to sparsity {sparsity_after_pruning:.2f}, "
+            #         f"prevented layer collapse to sparsity"
+            #         f"{sparsity_after_prevent:.2f}",
+            #     )
 
         torch.cuda.empty_cache()
         metrics[1]["sparsity"] = sparsity
@@ -478,8 +487,8 @@ def test(
 
     # SPECTRAL EXPONENT
     # <---
-    avg_exponent = set_spectral_exponent(net, apply=False)
-    log(logging.INFO, f"[test] Set average spectral exponent: {avg_exponent}")
+    avg_exponent = set_spectral_global_exponent(net, False)
+    log(logging.INFO, f"[test] Average spectral exponent: {avg_exponent}")
     # --->
 
     # get the global model

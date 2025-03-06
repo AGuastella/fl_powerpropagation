@@ -28,6 +28,7 @@ fit_config:
     epochs: 1
     learning_rate: 0.5
     final_learning_rate: 0.01
+    warmup_rounds: 0
     warmup: 0
     tot_rounds: 700
   extra: {window_training: false, in_out_eval: false, mask: false, noise: 0}

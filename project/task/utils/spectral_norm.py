@@ -44,16 +44,26 @@ class SpectralNormHandler:
             weight_normalized = self._compute_spectral_norm(weight)
 
             # comute the weight_normalized average value
-            # weight_normalized_avg = torch.mean(weight_normalized)
+            weight_normalized_avg = torch.mean(weight_normalized)
             # compute the average value of the non zero weight
-            weight_normalized_avg = torch.mean(
-                weight_normalized[weight_normalized != 0]
-            )
+            # weight_normalized_avg = torch.mean(
+            #     weight_normalized[weight_normalized != 0]
+            # )
 
             # Compute the exponent
             # exponent = 1 + (self.exponent_range * weight_normalized.view_as(weight))
             # exponent = torch.clamp(exponent, max=10)  # Prevent overflow
-            exponent = 1 + weight_normalized_avg
+            # exponent = 1 + weight_normalized_avg
+
+            # print(f"Weight normalized average: {weight_normalized_avg}")
+
+            # add a check if exponent is nan
+            if torch.isnan(weight_normalized_avg):
+                # print(f"Exponent is nan. Number of non zero values: {torch.sum(weight_normalized != 0)}")
+                exponent = 1.0
+            else:
+                weight_normalized_avg = round(weight_normalized_avg.item(), 8)
+                exponent = 1.0 + weight_normalized_avg
 
             print(f"Exponent: {exponent}")
 
@@ -68,9 +78,9 @@ class SpectralNormHandler:
         weight_abs = weight.abs()
         weight_updated = sign_weight * torch.pow(weight_abs, exponent)
         # normalize the weight to the original sigma
-        weight_updated = weight_updated * (
-            weight_updated / torch.pow(self.sigma, 1 + self.exponent_range)
-        )
+        # weight_updated = weight_updated * (
+        #     weight_updated / torch.pow(self.sigma, 1 + self.exponent_range)
+        # )
 
         return weight_updated
 

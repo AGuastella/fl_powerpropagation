@@ -1,0 +1,9 @@
+---
+name: FedAdamCustom
+
+init:
+  _target_: project.fed.server.strategy.fedadam.FedAdam
+  beta_1: 0.9
+  beta_2: 0.99
+  eta: 0.01
+  tau: 0.001

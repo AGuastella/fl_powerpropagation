@@ -2,17 +2,18 @@
 # These strings are constants used by the dispatcher to select functionality at runtime
 # Please implement all behaviour in the task-level dispatch.py file and then add the dispatch functions to the top-level dispatch.py
 # Choose the model and dataset
-# model_and_data: SPEECH_RN18
-# model_and_data: SPEECH_SPARSYFED_NA_RN18
-model_and_data: SPEECH_SPARSYFED_RN18
-# model_and_data: SPEECH_ZEROFL_RN18
+# model_and_data: VIT
+model_and_data: CUB_TINYVIT
+# model_and_data: CUB_TINYVIT_SPARSYFED
+# model_and_data: CUB_TINYVIT_SPARSYFED_NO_ACT
 
 # Choose the train, test and server fed_eval functions
-train_structure: SPEECH_RN18_PRUNE
-# train_structure: SPEECH_RN18_FIX
+# train_structure: CUB_TINYVIT
+train_structure: CUB_TINYVIT_PRUNE
+# train_structure: CUB_TINYVIT_FIX
 
 alpha: 1.0
-sparsity: 0.0
+sparsity: 0.5
 mask: 0.0
 
 # Client fit config
@@ -21,24 +22,30 @@ fit_config:
   net_config: {}
   # Dataloader requires batch_size
   dataloader_config:
-    batch_size: 16
+    batch_size: 32
   # The train function requires epochs and learning_rate
   run_config:
-    epochs: 1
-    learning_rate: 0.5
-    final_learning_rate: 0.01
+    epochs: 1 # 3
+    warmup_epochs: 0 # 2
+    learning_rate: 0.01 # 1e-2
+    final_learning_rate: 0.01 #1e-4
     warmup_rounds: 0
+    momentum: 0.0
+    nesterov: True
+    weight_decay: 0.001
+    gradient_clip_val: 0.0
     warmup: 0
-    tot_rounds: 700
+    tot_rounds: 200
   # No extra config
-  extra: {in_out_eval: false, mask: false}
+  extra: {in_out_eval: false, mask: false, noise: 0.0}
+  # extra: {window_training: false, in_out_eval: false, mask: false, noise: 0}
 
 # Client eval config
 eval_config:
   net_config: {}
   # The testing function batch size can be as high as the GPU supports
   dataloader_config:
-    batch_size: 256
+    batch_size: 64
   # Unlike train, the mnist train function takes no parameters?
   run_config: {}
   extra: {window_training: false, mask: false}
@@ -49,7 +56,7 @@ fed_test_config:
   net_config: {}
   # The testing function batch size can be as high as the GPU supports
   dataloader_config:
-    batch_size: 256
+    batch_size: 64
   # Unlike train, the mnist train function takes no parameters?
   run_config: {}
   extra: {}
@@ -61,4 +68,11 @@ net_config_initial_parameters: {}
 # The names of metrics you wish to aggregate
 fit_metrics: [train_loss, train_accuracy, learning_rate]
 
-evaluate_metrics: [test_accuracy, sparsity]
+evaluate_metrics:
+  - test_accuracy
+  # - test_accuracy_0.9
+  # - test_accuracy_0.95
+  # - test_accuracy_0.99
+  # - test_accuracy_0.995
+  # - test_accuracy_0.999 
+  - sparsity

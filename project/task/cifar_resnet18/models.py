@@ -449,7 +449,7 @@ def get_parameters_to_prune(
     return parameters_to_prune
 
 
-def set_spectral_exponent(net: nn.Module, apply: bool = False) -> float:
+def set_spectral_global_exponent(net: nn.Module, apply: bool = False) -> float:
     """Compute the average spectral exponent across all layers.
 
     Then set this value as the alpha for all custom layers in the network.
@@ -488,10 +488,14 @@ def set_spectral_exponent(net: nn.Module, apply: bool = False) -> float:
             # Compute average of non-zero normalized weights
             weight_normalized_avg = torch.mean(
                 weight_normalized[weight_normalized != 0]
-            )
+            ).item()
 
             # Compute exponent for this layer
-            exponent = 1 + weight_normalized_avg.item()
+            exponent = 1 + weight_normalized_avg
+            exponent = round(exponent, 4)
+            # check if exponent is nan or all the weights are zero
+            if exponent is None or len(weight_normalized[weight_normalized != 0]) == 0:
+                exponent = 1.0
             exponents.append(exponent)
 
     # Apply first pass to collect all exponents
@@ -506,8 +510,7 @@ def set_spectral_exponent(net: nn.Module, apply: bool = False) -> float:
         return 1.0  # Default value if no layers processed
 
     avg_exponent = sum(exponents) / len(exponents)
-    # avg_exponent = min(exponents)
-    log(logging.INFO, f"Average spectral exponent computed: {avg_exponent}")
+    # avg_exponent = max(exponents)
 
     # Second pass: set the average exponent for all custom layers
     def set_layer_exponent(module: nn.Module) -> None:
@@ -524,5 +527,51 @@ def set_spectral_exponent(net: nn.Module, apply: bool = False) -> float:
     # Apply second pass to set the average exponent
     if apply:
         net.apply(set_layer_exponent)
+        log(
+            logging.INFO,
+            f"Average spectral exponent applied to layers. Exponent: {avg_exponent}",
+        )
+    else:
+        log(
+            logging.INFO,
+            "Average spectral exponent NOT applied to layers. Exponent:"
+            f" {avg_exponent}",
+        )
 
     return avg_exponent
+
+
+def prevent_layer_collapse(
+    dense_net: nn.Module, sparse_net: nn.Module, amount: float = 0.01
+) -> nn.Module:
+    """Prevent layer collapse.
+
+    This is done copying the weights from the dense network to the sparse network.
+
+    The function does:
+        - check if some layer of the sparse model has collapsed,
+            i.e. all the weights are zero
+        - if a layer has collapsed, it copies the top-k of the weights (amount)
+            from the dense model to the sparse model
+        - return the sparse model with the copied weights
+    """
+    for dense_layer, sparse_layer in zip(
+        dense_net.modules(), sparse_net.modules(), strict=True
+    ):
+        if (
+            isinstance(
+                sparse_layer, nn.Conv2d | nn.Linear | SparsyFedLinear | SparsyFedConv2D
+            )
+            and torch.sum(sparse_layer.weight.data != 0) == 0
+        ):
+            # log(logging.WARNING, f"Layer collapsed: {sparse_layer}")
+            k = int(amount * dense_layer.weight.data.numel())
+            topk_indices = torch.topk(
+                dense_layer.weight.data.abs().flatten(), k
+            ).indices
+            sparse_layer.weight.data.flatten()[
+                topk_indices
+            ] = dense_layer.weight.data.flatten()[topk_indices]
+            if sparse_layer.bias is not None:
+                sparse_layer.bias.data = dense_layer.bias.data.clone()
+    return sparse_net
